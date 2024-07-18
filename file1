@@ -1,47 +1,37 @@
-Hello DevOps:wq 
-<template>
-    <lightning-card>
-        <div class="slds-grid slds-wrap">
-            <!-- First Column -->
-            <div class="slds-col slds-size_1-of-2 slds-p-around_medium">
-                <div class="slds-grid slds-wrap slds-grid_align-spread">
-                    <div class="slds-col slds-size_1-of-2 slds-text-align_right">
-                        Key 1:
-                    </div>
-                    <div class="slds-col slds-size_1-of-2 slds-text-align_left">
-                        Value 1
-                    </div>
-                </div>
-                <div class="slds-grid slds-wrap slds-grid_align-spread">
-                    <div class="slds-col slds-size_1-of-2 slds-text-align_right">
-                        Key 2:
-                    </div>
-                    <div class="slds-col slds-size_1-of-2 slds-text-align_left">
-                        Value 2
-                    </div>
-                </div>
-                <!-- Add more key-value pairs as needed -->
-            </div>
-            <!-- Second Column -->
-            <div class="slds-col slds-size_1-of-2 slds-p-around_medium">
-                <div class="slds-grid slds-wrap slds-grid_align-spread">
-                    <div class="slds-col slds-size_1-of-2 slds-text-align_right">
-                        Key A:
-                    </div>
-                    <div class="slds-col slds-size_1-of-2 slds-text-align_left">
-                        Value A
-                    </div>
-                </div>
-                <div class="slds-grid slds-wrap slds-grid_align-spread">
-                    <div class="slds-col slds-size_1-of-2 slds-text-align_right">
-                        Key B:
-                    </div>
-                    <div class="slds-col slds-size_1-of-2 slds-text-align_left">
-                        Value B
-                    </div>
-                </div>
-                <!-- Add more key-value pairs as needed -->
-            </div>
-        </div>
-    </lightning-card>
-</template>
+ public void addTeamMemberBasedOnRecordTypeAndPsG(Id caseId, String caseRecordTypeId) {
+    // Get record type name by ID
+    String recordTypeName = getRecordTypeNameByID('Case', caseRecordTypeId);
+
+    // Get mapping records metadata
+    Map<Id, Care_PSGs_RecordTypes_Mapping_mdt> mappingRecordsMetadata = Care_PSGs_RecordTypes_Mapping_mdt.getAll();
+
+    // Get permission set group assignments and map by DeveloperName
+    Map<String, PermissionSetAssignment> permissionSetGroupAssignments = new Map<String, PermissionSetAssignment>(
+        [SELECT PermissionSetId, PermissionSetGroupId, PermissionSetGroup.DeveloperName 
+         FROM PermissionSetAssignment]
+        .stream()
+        .collect(Collectors.toMap(
+            assignment -> assignment.PermissionSetGroup.DeveloperName, 
+            assignment -> assignment))
+    );
+
+    // Process mapping records
+    for (Care_PSGs_RecordTypes_Mapping_mdt mappingMetadataRecord : mappingRecordsMetadata.values()) {
+        // Check if the permission set group assignment exists
+        PermissionSetAssignment assignment = permissionSetGroupAssignments.get(mappingMetadataRecord.Permission_Set_Group_Name__c);
+
+        if (assignment != null) {
+            // Split record type access values and check if it contains the recordTypeName
+            List<String> recordTypeNameAccess = mappingMetadataRecord.Case_Record_Type_Access__c.split(',');
+
+            if (recordTypeNameAccess.contains(recordTypeName)) {
+                // Get case team name
+                String caseTeamName = mappingMetadataRecord.Case_Team_Name__c;
+                System.debug('Case team details: ' + caseTeamName);
+
+                // Additional processing based on case team name
+                // TODO: Add logic to process the case team name
+            }
+        }
+    }
+}
